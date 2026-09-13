@@ -89,40 +89,76 @@ input{
     font-size:16px;
 }
 
-/* HISTORY */
+/* WITHDRAW HISTORY */
 
 .history-card{
-    background:white;
-    padding:18px;
-    border-radius:20px;
-    margin-top:20px;
+    background:#fff;
+    padding:14px;
+    border-radius:16px;
+    margin-top:16px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
 }
 
 .history-title{
-    font-size:20px;
+    font-size:18px;
     font-weight:bold;
-    margin-bottom:15px;
+    margin-bottom:10px;
 }
 
 .withdraw-item{
-    border:1px solid #ddd;
-    border-radius:15px;
-    padding:15px;
-    margin-bottom:12px;
-    background:#fafafa;
+    background:#f8f9fb;
+    border:1px solid #e8e8e8;
+    border-radius:12px;
+    padding:11px 13px;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
 }
 
 .amount{
-    font-size:20px;
+    font-size:17px;
     font-weight:bold;
+    color:#222;
 }
 
 .date{
-    font-size:13px;
+    font-size:11px;
     color:#777;
-    margin-top:5px;
+    margin-top:3px;
 }
 
+.status{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:15px;
+    font-size:11px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.pending{
+    background:#fff3cd;
+    color:#9a6b00;
+}
+
+.accepted{
+    background:#d9f7df;
+    color:#16803c;
+}
+
+.rejected{
+    background:#ffe0e0;
+    color:#d22b2b;
+}
+
+.no-data{
+    text-align:center;
+    color:#777;
+    padding:10px;
+    font-size:13px;
+}
 /* STATUS */
 
 .status{
