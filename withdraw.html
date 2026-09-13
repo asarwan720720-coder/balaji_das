@@ -1,0 +1,491 @@
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Withdraw</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  padding:15px;
+}
+
+#userId{
+  position:fixed;
+  left:15px;
+  top:10px;
+  background:green;
+  color:#fff;
+  padding:8px 15px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+#wallet{
+  position:fixed;
+  right:15px;
+  top:10px;
+  background:red;
+  color:#fff;
+  padding:8px 15px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  margin-top:50px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+}
+
+.main-btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:15px;
+  background:#ff4d4d;
+  color:#fff;
+  font-weight:bold;
+  margin-top:15px;
+  cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="userId">
+  ID: --
+</div>
+
+<div id="wallet">
+  ₹ 0
+</div>
+
+
+<div class="card" id="step1">
+
+  <h3>
+    Withdraw Request
+  </h3>
+
+  <input
+    type="number"
+    id="amount"
+    placeholder="Enter Amount">
+
+  <button
+    class="main-btn"
+    onclick="submitWithdraw()">
+
+    WITHDRAW
+
+  </button>
+
+</div>
+
+
+<script>
+
+// =====================================
+// SUPABASE
+// =====================================
+
+const client =
+supabase.createClient(
+
+  "https://katbdbzoufiblnnsoxkk.supabase.co",
+
+  "sb_publishable_--fdpQMmSlUyt2ywjUErgQ_LXGvQH-a"
+
+);
+
+
+// =====================================
+// USER
+// =====================================
+
+const user =
+JSON.parse(
+  localStorage.getItem("user")
+);
+
+
+// =====================================
+// LOAD USER
+// =====================================
+
+async function loadUser(){
+
+  if(!user){
+
+    alert("Login required");
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  } = await client
+
+    .from("login")
+
+    .select("balance")
+
+    .eq(
+      "id",
+      user.id
+    )
+
+    .single();
+
+
+  if(error){
+
+    console.log(error);
+
+    return;
+
+  }
+
+
+  document.getElementById("wallet").innerText =
+    "₹ " + (data.balance || 0);
+
+
+  document.getElementById("userId").innerText =
+    "ID: " + user.id;
+
+}
+
+
+loadUser();
+
+
+// =====================================
+// SUBMIT WITHDRAW
+// =====================================
+
+async function submitWithdraw(){
+
+  if(!user){
+
+    alert("Login required");
+
+    return;
+
+  }
+
+
+  const amount =
+    Number(
+      document.getElementById("amount").value
+    );
+
+
+  // AMOUNT CHECK
+
+  if(!amount){
+
+    alert("Amount daalo");
+
+    return;
+
+  }
+
+
+  // MINIMUM
+
+  if(amount < 100){
+
+    alert(
+      "Minimum Withdraw ₹100 hai ❌"
+    );
+
+    return;
+
+  }
+
+
+  // GET CURRENT BALANCE
+
+  const {
+    data,
+    error
+  } = await client
+
+    .from("login")
+
+    .select("balance")
+
+    .eq(
+      "id",
+      user.id
+    )
+
+    .single();
+
+
+  if(error){
+
+    alert(
+      "Balance check nahi hua"
+    );
+
+    return;
+
+  }
+
+
+  const balance =
+    Number(data.balance || 0);
+
+
+  // BALANCE CHECK
+
+  if(amount > balance){
+
+    alert(
+      "Wallet me itna balance nahi hai ❌"
+    );
+
+    return;
+
+  }
+
+
+  // NEW BALANCE
+
+  const newBalance =
+    balance - amount;
+
+
+  // UPDATE WALLET
+
+  const {
+    error:updateError
+  } = await client
+
+    .from("login")
+
+    .update({
+      balance:newBalance
+    })
+
+    .eq(
+      "id",
+      user.id
+    );
+
+
+  if(updateError){
+
+    console.log(updateError);
+
+    alert(
+      "Balance update nahi hua"
+    );
+
+    return;
+
+  }
+
+
+  // WITHDRAW REQUEST
+
+  const {
+    error:requestError
+  } = await client
+
+    .from("withdraw_requests")
+
+    .insert({
+
+      user_id:user.id,
+
+      mobile:user.mobile,
+
+      amount:amount,
+
+      status:"pending"
+
+    });
+
+
+  if(requestError){
+
+    console.log(requestError);
+
+    alert(
+      "Withdraw request create nahi hui"
+    );
+
+    return;
+
+  }
+
+
+  alert(
+    "Withdraw request successfully sent ✅"
+  );
+
+
+  document.getElementById("amount").value =
+    "";
+
+
+  loadUser();
+
+}
+
+
+// =====================================
+// WITHDRAW TIMING
+// =====================================
+
+function checkWithdrawTime(){
+
+  const now =
+    new Date();
+
+  const hour =
+    now.getHours();
+
+  const minute =
+    now.getMinutes();
+
+  const currentMinutes =
+    hour * 60 + minute;
+
+
+  const offTime =
+    0;
+
+  const onTime =
+    10 * 60 + 30;
+
+
+  // 12:00 AM TO 10:30 AM CLOSED
+
+  if(
+    currentMinutes >= offTime &&
+    currentMinutes < onTime
+  ){
+
+    document.getElementById("step1").style.display =
+      "none";
+
+
+    let message =
+      document.getElementById(
+        "withdrawClosed"
+      );
+
+
+    if(!message){
+
+      message =
+        document.createElement("div");
+
+      message.id =
+        "withdrawClosed";
+
+      message.className =
+        "card";
+
+
+      message.innerHTML = `
+
+        <h2 style="text-align:center;">
+
+          Withdraw Closed ⏰
+
+        </h2>
+
+        <p style="text-align:center;font-weight:bold;">
+
+          Withdraw abhi band hai.
+
+        </p>
+
+        <p style="text-align:center;">
+
+          Withdraw subah
+          <b>10:30 AM</b>
+          se dobara start hoga.
+
+        </p>
+
+      `;
+
+
+      document.body.appendChild(
+        message
+      );
+
+    }
+
+  }else{
+
+    const message =
+      document.getElementById(
+        "withdrawClosed"
+      );
+
+
+    if(message){
+
+      message.remove();
+
+    }
+
+
+    document.getElementById("step1").style.display =
+      "block";
+
+  }
+
+}
+
+
+// PAGE OPEN
+
+checkWithdrawTime();
+
+
+// EVERY SECOND
+
+setInterval(
+  checkWithdrawTime,
+  1000
+);
+
+</script>
+
+</body>
+
+</html>
+```
