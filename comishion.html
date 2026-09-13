@@ -146,6 +146,110 @@ async function loadCommissionHistory(){
     }
 
 
+    /* =========================
+       CURRENT USER KA REFER CODE
+    ========================= */
+
+    const { data: currentUser, error: currentUserError } =
+
+        await client
+        .from("login")
+        .select("refer_code")
+        .eq(
+            "id",
+            Number(userId)
+        )
+        .single();
+
+
+    if(currentUserError || !currentUser){
+
+        console.error(
+            "Current User Error:",
+            currentUserError
+        );
+
+        box.innerHTML =
+
+            '<div class="no-data">User data nahi mila.</div>';
+
+        return;
+
+    }
+
+
+    /* =========================
+       CURRENT USER KI TEAM
+       
+       Team wahi hogi jinke
+       referred_by me current
+       user ka refer_code hai.
+    ========================= */
+
+    const { data: teamUsers, error: teamError } =
+
+        await client
+        .from("login")
+        .select("id")
+        .eq(
+            "referred_by",
+            currentUser.refer_code
+        );
+
+
+    if(teamError){
+
+        console.error(
+            "Team Error:",
+            teamError
+        );
+
+        box.innerHTML =
+
+            '<div class="no-data">Team load nahi hui.</div>';
+
+        return;
+
+    }
+
+
+    /*
+       Team ke user IDs
+    */
+
+    const teamIds =
+
+        (teamUsers || [])
+        .map(
+            user => Number(user.id)
+        );
+
+
+    /*
+       Agar team me koi user nahi hai
+    */
+
+    if(teamIds.length === 0){
+
+        box.innerHTML =
+
+            '<div class="no-data">Aapki team me abhi koi user nahi hai.</div>';
+
+        return;
+
+    }
+
+
+    /* =========================
+       COMMISSION HISTORY
+       
+       Sirf current user ko
+       mili commission.
+       
+       Aur referral_id team ke
+       kisi user ki honi chahiye.
+    ========================= */
+
     const { data, error } =
 
         await client
@@ -156,6 +260,10 @@ async function loadCommissionHistory(){
         .eq(
             "user_id",
             Number(userId)
+        )
+        .in(
+            "referral_id",
+            teamIds
         )
         .order(
             "created_at",
@@ -198,10 +306,13 @@ async function loadCommissionHistory(){
     */
 
     const referralIds =
+
         [
             ...new Set(
                 data
-                .map(r => r.referral_id)
+                .map(
+                    r => r.referral_id
+                )
                 .filter(Boolean)
             )
         ];
@@ -212,7 +323,7 @@ async function loadCommissionHistory(){
 
     if(referralIds.length > 0){
 
-        const { data:historyRows } =
+        const { data: historyRows } =
 
             await client
             .from("history")
@@ -259,9 +370,12 @@ async function loadCommissionHistory(){
         const matchingHistory =
 
             historyData.find(
+
                 h =>
+
                 Number(h.user_id) ===
                 Number(record.referral_id)
+
             );
 
 
@@ -269,9 +383,11 @@ async function loadCommissionHistory(){
 
             matchingHistory &&
             matchingHistory.market
+
             ? String(
                 matchingHistory.market
               ).substring(0,2)
+
             : "-";
 
 
