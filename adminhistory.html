@@ -276,7 +276,6 @@ async function loadUsers(){
 
     data.forEach(r => {
 
-
         html += `
 
         <tr>
@@ -389,11 +388,7 @@ async function updateBalance(){
     }
 
 
-    /*
-       BUTTON DISABLE
-       taaki same action
-       baar-baar na chale
-    */
+    /* BUTTON DISABLE */
 
     button.disabled = true;
 
@@ -496,7 +491,10 @@ async function updateBalance(){
 
     if(updateError){
 
-        console.error(updateError);
+        console.error(
+            "Balance Update Error:",
+            updateError
+        );
 
         alert(
             "Balance update nahi hua."
@@ -513,60 +511,51 @@ async function updateBalance(){
 
 
     /* =========================
-       SAVE HISTORY
+       SAVE ADMIN HISTORY
     ========================= */
 
     const { error:historyError } =
 
         await client
-        .from("history")
+        .from("admin_history")
         .insert({
 
-            user_id:id,
+            user_id:Number(id),
 
-            admin_user_id:id,
-
-            action_amount:amount,
+            admin_user_id:null,
 
             action_type:
                 action === "deposit"
                 ? "Deposit"
                 : "Withdraw",
 
+            action_amount:amount,
+
             old_balance:oldBalance,
 
             new_balance:newBalance,
 
-            admin_action:
-                action === "deposit"
-                ? "Admin Deposit"
-                : "Admin Withdraw",
-
-            status:"success",
-
-            total:amount,
-
-            mode:"admin"
+            status:"success"
 
         });
 
 
-    /*
-       AGAR HISTORY SAVE NA HO
-    */
+    /* =========================
+       HISTORY ERROR
+    ========================= */
 
     if(historyError){
 
         console.error(
-            "History Error:",
+            "Admin History Error:",
             historyError
         );
 
 
         /*
-           Balance ko purane
-           balance par wapas
-           karne ki koshish
+           Agar history save nahi hui
+           to balance ko purane
+           balance par wapas karenge.
         */
 
         await client
@@ -580,7 +569,7 @@ async function updateBalance(){
 
 
         alert(
-            "History save nahi hui, isliye balance change cancel kar diya gaya."
+            "Admin history save nahi hui.\n\nBalance change cancel kar diya gaya."
         );
 
 
@@ -602,9 +591,9 @@ async function updateBalance(){
 
         action === "deposit"
 
-        ? "Deposit successful aur history save ho gayi. ✅"
+        ? "Deposit successful aur admin history save ho gayi. ✅"
 
-        : "Withdraw successful aur history save ho gayi. ✅"
+        : "Withdraw successful aur admin history save ho gayi. ✅"
 
     );
 
@@ -632,7 +621,7 @@ async function updateBalance(){
 
 
 /* =========================
-   LOAD HISTORY
+   LOAD ADMIN HISTORY
 ========================= */
 
 async function loadHistory(){
@@ -650,14 +639,9 @@ async function loadHistory(){
     const { data, error } =
 
         await client
-        .from("history")
+        .from("admin_history")
         .select(
-            "id,user_id,admin_user_id,action_amount,action_type,old_balance,new_balance,admin_action,status,created_at,total,mode"
-        )
-        .not(
-            "admin_action",
-            "is",
-            null
+            "id,user_id,admin_user_id,action_type,action_amount,old_balance,new_balance,status,created_at"
         )
         .order(
             "created_at",
@@ -670,14 +654,14 @@ async function loadHistory(){
     if(error){
 
         console.error(
-            "History Load Error:",
+            "Admin History Load Error:",
             error
         );
 
 
         box.innerHTML =
 
-            '<div class="no-history">History load nahi hui.</div>';
+            '<div class="no-history">Admin history load nahi hui.</div>';
 
         return;
 
@@ -688,139 +672,5 @@ async function loadHistory(){
 
         box.innerHTML =
 
-            '<div class="no-history">Abhi koi admin balance history nahi hai.</div>';
-
-        return;
-
-    }
-
-
-    let html = `
-
-    <table class="history-table">
-
-        <thead>
-
-            <tr>
-
-                <th>History ID</th>
-
-                <th>User ID</th>
-
-                <th>Action</th>
-
-                <th>Amount</th>
-
-                <th>Old Balance</th>
-
-                <th>New Balance</th>
-
-                <th>Status</th>
-
-                <th>Date / Time</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-    `;
-
-
-    data.forEach(r => {
-
-
-        const action =
-            r.action_type || "-";
-
-
-        const actionClass =
-            action.toLowerCase()
-            === "deposit"
-            ? "deposit"
-            : "withdraw";
-
-
-        const date =
-            r.created_at
-            ? new Date(
-                r.created_at
-              ).toLocaleString(
-                "en-IN"
-              )
-            : "-";
-
-
-        html += `
-
-        <tr>
-
-            <td>
-                ${r.id ?? ""}
-            </td>
-
-            <td>
-                ${r.user_id ?? ""}
-            </td>
-
-            <td class="${actionClass}">
-                ${action}
-            </td>
-
-            <td>
-                ₹ ${r.action_amount ?? r.total ?? 0}
-            </td>
-
-            <td>
-                ₹ ${r.old_balance ?? 0}
-            </td>
-
-            <td>
-                ₹ ${r.new_balance ?? 0}
-            </td>
-
-            <td class="success">
-                ${r.status ?? "-"}
-            </td>
-
-            <td>
-                ${date}
-            </td>
-
-        </tr>
-
-        `;
-
-    });
-
-
-    html += `
-
-        </tbody>
-
-    </table>
-
-    `;
-
-
-    box.innerHTML = html;
-
-}
-
-
-/* =========================
-   START
-========================= */
-
-loadUsers();
-
-loadHistory();
-
-</script>
-
-
-</body>
-
-</html>
+            '<div class="no-history">A
 ```
