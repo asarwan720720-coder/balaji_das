@@ -1,0 +1,1428 @@
+```html
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Admin Deposit Requests</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<style>
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+
+    margin:0;
+
+    padding:20px 12px 40px;
+
+    font-family:Arial,sans-serif;
+
+    background:#f3f4f6;
+
+    color:#222;
+
+}
+
+
+.container{
+
+    width:100%;
+
+    max-width:650px;
+
+    margin:auto;
+
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.header{
+
+    background:
+    linear-gradient(
+        135deg,
+        #e5b52e,
+        #d19b19
+    );
+
+    color:white;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    text-align:center;
+
+    margin-bottom:18px;
+
+    box-shadow:
+    0 4px 12px rgba(0,0,0,.15);
+
+}
+
+.header h2{
+
+    margin:0;
+
+    font-size:22px;
+
+}
+
+.header p{
+
+    margin:7px 0 0;
+
+    font-size:13px;
+
+    opacity:.9;
+
+}
+
+
+/* =========================
+   REFRESH
+========================= */
+
+.refreshBtn{
+
+    width:100%;
+
+    border:0;
+
+    background:#111;
+
+    color:white;
+
+    padding:13px;
+
+    border-radius:12px;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    margin-bottom:18px;
+
+}
+
+.refreshBtn:active{
+
+    transform:scale(.98);
+
+}
+
+
+/* =========================
+   REQUEST CARD
+========================= */
+
+.request{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:17px;
+
+    margin-bottom:15px;
+
+    box-shadow:
+    0 3px 12px rgba(0,0,0,.10);
+
+}
+
+
+/* =========================
+   REQUEST TOP
+========================= */
+
+.requestTop{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:13px;
+
+}
+
+.requestId{
+
+    font-size:13px;
+
+    color:#777;
+
+}
+
+.pending{
+
+    background:#fff3cd;
+
+    color:#856404;
+
+    padding:6px 10px;
+
+    border-radius:20px;
+
+    font-size:12px;
+
+    font-weight:bold;
+
+}
+
+
+/* =========================
+   AMOUNT
+========================= */
+
+.amount{
+
+    background:#f0fff5;
+
+    color:#159447;
+
+    border-radius:14px;
+
+    padding:13px;
+
+    text-align:center;
+
+    font-size:26px;
+
+    font-weight:bold;
+
+    margin-bottom:14px;
+
+}
+
+
+/* =========================
+   INFO
+========================= */
+
+.info{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    padding:9px 0;
+
+    border-bottom:1px solid #eee;
+
+    font-size:14px;
+
+}
+
+.info:last-child{
+
+    border-bottom:0;
+
+}
+
+.info .label{
+
+    color:#777;
+
+}
+
+.info .value{
+
+    font-weight:bold;
+
+    text-align:right;
+
+    word-break:break-word;
+
+}
+
+
+/* =========================
+   SCREENSHOT
+========================= */
+
+.screenshotTitle{
+
+    margin-top:15px;
+
+    margin-bottom:8px;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+}
+
+
+.screenshot{
+
+    width:100%;
+
+    max-width:320px;
+
+    max-height:400px;
+
+    object-fit:contain;
+
+    display:block;
+
+    margin:auto;
+
+    border-radius:12px;
+
+    border:1px solid #ddd;
+
+    cursor:pointer;
+
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.buttons{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:18px;
+
+}
+
+
+button.action{
+
+    flex:1;
+
+    border:0;
+
+    padding:14px 8px;
+
+    border-radius:12px;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+}
+
+
+.accept{
+
+    background:#159447;
+
+}
+
+
+.reject{
+
+    background:#d63031;
+
+}
+
+
+button.action:active{
+
+    transform:scale(.97);
+
+}
+
+
+button.action:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+
+}
+
+
+/* =========================
+   LOADING
+========================= */
+
+.loading{
+
+    background:white;
+
+    padding:30px 15px;
+
+    border-radius:16px;
+
+    text-align:center;
+
+    color:#777;
+
+}
+
+
+/* =========================
+   EMPTY
+========================= */
+
+.empty{
+
+    background:white;
+
+    padding:30px 15px;
+
+    border-radius:16px;
+
+    text-align:center;
+
+    color:#777;
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,.08);
+
+}
+
+
+/* =========================
+   ERROR
+========================= */
+
+.error{
+
+    background:#ffe5e5;
+
+    color:#c62828;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    text-align:center;
+
+    margin-bottom:15px;
+
+    font-weight:bold;
+
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:420px){
+
+    body{
+
+        padding:12px 10px 30px;
+
+    }
+
+    .request{
+
+        padding:14px;
+
+    }
+
+    .amount{
+
+        font-size:24px;
+
+    }
+
+    .info{
+
+        font-size:13px;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h2>
+            💰 Deposit Requests
+        </h2>
+
+        <p>
+            Pending deposit requests
+        </p>
+
+    </div>
+
+
+    <!-- REFRESH -->
+
+    <button
+        class="refreshBtn"
+        onclick="loadDeposits()">
+
+        🔄 Refresh Requests
+
+    </button>
+
+
+    <!-- REQUEST LIST -->
+
+    <div id="requests">
+
+        <div class="loading">
+
+            Loading deposit requests...
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const client =
+    supabase.createClient(
+
+        "https://katbdbzoufiblnnsoxkk.supabase.co",
+
+        "sb_publishable_--fdpQMmSlUyt2ywjUErgQ_LXGvQH-a"
+
+    );
+
+
+
+/* =====================================================
+   LOAD DEPOSIT REQUESTS
+===================================================== */
+
+async function loadDeposits(){
+
+    const box =
+        document.getElementById("requests");
+
+
+    box.innerHTML = `
+
+        <div class="loading">
+
+            Loading deposit requests...
+
+        </div>
+
+    `;
+
+
+    try{
+
+        const {
+            data,
+            error
+        } = await client
+
+            .from("deposit_requests")
+
+            .select("*")
+
+            .eq("status","pending")
+
+            .order(
+                "created_at",
+                {
+                    ascending:false
+                }
+            );
+
+
+        /* =========================
+           ERROR
+        ========================= */
+
+        if(error){
+
+            console.error(
+                "DEPOSIT LOAD ERROR:",
+                error
+            );
+
+
+            box.innerHTML = `
+
+                <div class="error">
+
+                    Deposit requests load nahi hui.
+
+                    <br><br>
+
+                    ${error.message}
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        /* =========================
+           NO REQUEST
+        ========================= */
+
+        if(
+            !data ||
+            data.length === 0
+        ){
+
+            box.innerHTML = `
+
+                <div class="empty">
+
+                    <div style="font-size:35px;">
+                        ✅
+                    </div>
+
+                    <br>
+
+                    No pending deposit requests.
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        /* =========================
+           CLEAR
+        ========================= */
+
+        box.innerHTML = "";
+
+
+        /* =========================
+           CREATE REQUESTS
+        ========================= */
+
+        data.forEach(
+            request => {
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.className =
+                    "request";
+
+
+                /* =========================
+                   SCREENSHOT
+                ========================= */
+
+                let screenshotHTML = "";
+
+
+                if(
+                    request.screenshot &&
+                    request.screenshot.trim() !== ""
+                ){
+
+                    screenshotHTML = `
+
+                        <div class="screenshotTitle">
+
+                            🖼️ Payment Screenshot
+
+                        </div>
+
+                        <img
+
+                            src="${escapeHtml(
+                                request.screenshot
+                            )}"
+
+                            class="screenshot"
+
+                            onclick="openImage(
+                                '${escapeJs(
+                                    request.screenshot
+                                )}'
+                            )"
+
+                            onerror="
+                                this.style.display='none';
+                            "
+
+                        >
+
+                    `;
+
+                }
+
+
+                /* =========================
+                   CARD HTML
+                ========================= */
+
+                card.innerHTML = `
+
+                    <div class="requestTop">
+
+                        <div class="requestId">
+
+                            Request ID:
+                            <b>${request.id}</b>
+
+                        </div>
+
+
+                        <div class="pending">
+
+                            PENDING
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="amount">
+
+                        ₹${Number(
+                            request.amount || 0
+                        ).toLocaleString("en-IN")}
+
+                    </div>
+
+
+                    <div class="info">
+
+                        <div class="label">
+
+                            User ID
+
+                        </div>
+
+                        <div class="value">
+
+                            ${request.user_id}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info">
+
+                        <div class="label">
+
+                            Mobile
+
+                        </div>
+
+                        <div class="value">
+
+                            ${escapeHtml(
+                                request.mobile || "-"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info">
+
+                        <div class="label">
+
+                            UTR
+
+                        </div>
+
+                        <div class="value">
+
+                            ${escapeHtml(
+                                request.utr || "-"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info">
+
+                        <div class="label">
+
+                            Date / Time
+
+                        </div>
+
+                        <div class="value">
+
+                            ${
+                                request.created_at
+                                ? new Date(
+                                    request.created_at
+                                  ).toLocaleString(
+                                    "en-IN"
+                                  )
+                                : "-"
+                            }
+
+                        </div>
+
+                    </div>
+
+
+                    ${screenshotHTML}
+
+
+                    <div class="buttons">
+
+
+                        <button
+
+                            class="action accept"
+
+                            onclick="
+                                acceptDeposit(
+                                    ${request.id},
+                                    this
+                                )
+                            ">
+
+                            ✅ ACCEPT
+
+                        </button>
+
+
+                        <button
+
+                            class="action reject"
+
+                            onclick="
+                                rejectDeposit(
+                                    ${request.id},
+                                    this
+                                )
+                            ">
+
+                            ❌ REJECT
+
+                        </button>
+
+
+                    </div>
+
+                `;
+
+
+                box.appendChild(card);
+
+            }
+        );
+
+
+    }
+
+    catch(error){
+
+        console.error(
+            "ERROR:",
+            error
+        );
+
+
+        box.innerHTML = `
+
+            <div class="error">
+
+                Something went wrong.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+
+/* =====================================================
+   ACCEPT DEPOSIT
+===================================================== */
+
+async function acceptDeposit(
+    requestId,
+    button
+){
+
+
+    const confirmAccept =
+        confirm(
+
+            "Kya aap is deposit ko ACCEPT karna chahte hain?\n\n" +
+
+            "Accept karne par amount user ke wallet me add ho jayega."
+
+        );
+
+
+    if(!confirmAccept){
+
+        return;
+
+    }
+
+
+    /* =========================
+       DISABLE BUTTONS
+    ========================= */
+
+    const card =
+        button.closest(".request");
+
+
+    const buttons =
+        card.querySelectorAll(
+            "button"
+        );
+
+
+    buttons.forEach(
+        btn => {
+
+            btn.disabled = true;
+
+        }
+    );
+
+
+    button.innerText =
+        "Processing...";
+
+
+    try{
+
+
+        const {
+            data,
+            error
+        } = await client.rpc(
+
+            "accept_deposit",
+
+            {
+                p_request_id:
+                    requestId
+            }
+
+        );
+
+
+        /* =========================
+           RPC ERROR
+        ========================= */
+
+        if(error){
+
+            console.error(
+                "ACCEPT ERROR:",
+                error
+            );
+
+
+            alert(
+                "❌ Accept nahi hua.\n\n" +
+                error.message
+            );
+
+
+            buttons.forEach(
+                btn => {
+
+                    btn.disabled =
+                        false;
+
+                }
+            );
+
+
+            button.innerText =
+                "✅ ACCEPT";
+
+
+            return;
+
+        }
+
+
+        /* =========================
+           FUNCTION RESPONSE
+        ========================= */
+
+        if(
+            !data ||
+            data.success !== true
+        ){
+
+            alert(
+
+                "❌ " +
+
+                (
+                    data?.message ||
+                    "Deposit accept nahi hua."
+                )
+
+            );
+
+
+            buttons.forEach(
+                btn => {
+
+                    btn.disabled =
+                        false;
+
+                }
+            );
+
+
+            button.innerText =
+                "✅ ACCEPT";
+
+
+            return;
+
+        }
+
+
+        /* =========================
+           SUCCESS
+        ========================= */
+
+        alert(
+
+            "✅ Deposit Accepted!\n\n" +
+
+            "Amount: ₹" +
+            Number(
+                data.amount || 0
+            ).toLocaleString(
+                "en-IN"
+            ) +
+
+            "\n\nNew Balance: ₹" +
+
+            Number(
+                data.new_balance || 0
+            ).toLocaleString(
+                "en-IN"
+            )
+
+        );
+
+
+        /* =========================
+           RELOAD
+        ========================= */
+
+        loadDeposits();
+
+
+    }
+
+    catch(error){
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "❌ Something went wrong."
+        );
+
+
+        buttons.forEach(
+            btn => {
+
+                btn.disabled =
+                    false;
+
+            }
+        );
+
+
+        button.innerText =
+            "✅ ACCEPT";
+
+    }
+
+}
+
+
+
+/* =====================================================
+   REJECT DEPOSIT
+===================================================== */
+
+async function rejectDeposit(
+    requestId,
+    button
+){
+
+
+    const confirmReject =
+        confirm(
+
+            "Kya aap is deposit ko REJECT karna chahte hain?\n\n" +
+
+            "Reject karne par user ke wallet me amount add nahi hoga."
+
+        );
+
+
+    if(!confirmReject){
+
+        return;
+
+    }
+
+
+    /* =========================
+       DISABLE BUTTONS
+    ========================= */
+
+    const card =
+        button.closest(".request");
+
+
+    const buttons =
+        card.querySelectorAll(
+            "button"
+        );
+
+
+    buttons.forEach(
+        btn => {
+
+            btn.disabled = true;
+
+        }
+    );
+
+
+    button.innerText =
+        "Processing...";
+
+
+    try{
+
+
+        const {
+            data,
+            error
+        } = await client.rpc(
+
+            "reject_deposit",
+
+            {
+                p_request_id:
+                    requestId
+            }
+
+        );
+
+
+        /* =========================
+           RPC ERROR
+        ========================= */
+
+        if(error){
+
+            console.error(
+                "REJECT ERROR:",
+                error
+            );
+
+
+            alert(
+                "❌ Reject nahi hua.\n\n" +
+                error.message
+            );
+
+
+            buttons.forEach(
+                btn => {
+
+                    btn.disabled =
+                        false;
+
+                }
+            );
+
+
+            button.innerText =
+                "❌ REJECT";
+
+
+            return;
+
+        }
+
+
+        /* =========================
+           FUNCTION RESPONSE
+        ========================= */
+
+        if(
+            !data ||
+            data.success !== true
+        ){
+
+            alert(
+
+                "❌ " +
+
+                (
+                    data?.message ||
+                    "Deposit reject nahi hua."
+                )
+
+            );
+
+
+            buttons.forEach(
+                btn => {
+
+                    btn.disabled =
+                        false;
+
+                }
+            );
+
+
+            button.innerText =
+                "❌ REJECT";
+
+
+            return;
+
+        }
+
+
+        /* =========================
+           SUCCESS
+        ========================= */
+
+        alert(
+            "❌ Deposit Rejected."
+        );
+
+
+        /* =========================
+           RELOAD
+        ========================= */
+
+        loadDeposits();
+
+
+    }
+
+    catch(error){
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "❌ Something went wrong."
+        );
+
+
+        buttons.forEach(
+            btn => {
+
+                btn.disabled =
+                    false;
+
+            }
+        );
+
+
+        button.innerText =
+            "❌ REJECT";
+
+    }
+
+}
+
+
+
+/* =====================================================
+   OPEN SCREENSHOT
+===================================================== */
+
+function openImage(url){
+
+    window.open(
+        url,
+        "_blank"
+    );
+
+}
+
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHtml(value){
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =====================================================
+   JAVASCRIPT STRING ESCAPE
+===================================================== */
+
+function escapeJs(value){
+
+    return String(value)
+
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+
+        .replace(
+            /'/g,
+            "\\'"
+        )
+
+        .replace(
+            /"/g,
+            '\\"'
+        )
+
+        .replace(
+            /\n/g,
+            "\\n"
+        )
+
+        .replace(
+            /\r/g,
+            "\\r"
+        );
+
+}
+
+
+/* =====================================================
+   AUTO REFRESH
+===================================================== */
+
+setInterval(
+
+    () => {
+
+        loadDeposits();
+
+    },
+
+    30000
+
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadDeposits();
+
+
+</script>
+
+
+</body>
+
+</html>
+```
