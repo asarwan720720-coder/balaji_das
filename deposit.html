@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+   content="width=device-width, initial-scale=1.0">
+
+<title>Deposit</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f3f4f6;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.depositBox{
+  width:92%;
+  max-width:400px;
+  background:white;
+  padding:25px;
+  border-radius:20px;
+  box-shadow:0 4px 15px rgba(0,0,0,.15);
+}
+
+h2{
+  text-align:center;
+  margin-top:0;
+}
+
+label{
+  display:block;
+  margin-bottom:7px;
+  font-weight:bold;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:18px;
+  outline:none;
+  margin-bottom:12px;
+}
+
+input:focus{
+  border-color:#d19b19;
+}
+
+.payBtn{
+  width:100%;
+  margin-top:8px;
+  padding:14px;
+  border:0;
+  border-radius:11px;
+  background:#159447;
+  color:white;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.submitBtn{
+  width:100%;
+  margin-top:8px;
+  padding:14px;
+  border:0;
+  border-radius:11px;
+  background:#d19b19;
+  color:white;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.payBtn:active,
+.submitBtn:active{
+  transform:scale(.98);
+}
+
+.upiInfo{
+  margin-top:18px;
+  padding:12px;
+  background:#f5f5f5;
+  border-radius:10px;
+  text-align:center;
+  font-size:13px;
+  color:#555;
+}
+
+#utrSection{
+  display:none;
+  margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="depositBox">
+
+  <h2>💰 Deposit</h2>
+
+  <label>
+    Amount
+  </label>
+
+<input
+ id="amount"
+ type="number"
+ inputmode="decimal"
+ min="1"
+ step="1"
+ placeholder="Amount enter karein">
+
+<button
+ class="payBtn"
+ onclick="payNow()">
+
+```
+Pay Now
+```
+
+  </button>
+
+  <div class="upiInfo">
+
+```
+Payment UPI:<br>
+
+<b>8901239533@amazonpay</b>
+```
+
+  </div>
+
+  <!-- UTR SECTION -->
+
+  <div id="utrSection">
+
+```
+<label>
+  Payment ke baad UTR Number
+</label>
+
+<input
+  id="utr"
+  type="text"
+  placeholder="UTR number enter karein"
+  autocomplete="off">
+
+
+<button
+  class="submitBtn"
+  onclick="submitRequest()">
+
+  Submit Deposit Request
+
+</button>
+```
+
+  </div>
+
+</div>
+
+<script>
+
+/* =========================
+   SUPABASE
+========================= */
+
+const client =
+  supabase.createClient(
+    "https://katbdbzoufiblnnsoxkk.supabase.co",
+    "sb_publishable_--fdpQMmSlUyt2ywjUErgQ_LXGvQH-a"
+  );
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+let paymentAmount = 0;
+
+
+/* =========================
+   PAY NOW
+========================= */
+
+function payNow(){
+
+  const amountInput =
+    document.getElementById("amount");
+
+  const amount =
+    Number(amountInput.value);
+
+
+  if(
+    !amount ||
+    amount <= 0
+  ){
+
+    alert(
+      "Pehle valid amount enter karein."
+    );
+
+    amountInput.focus();
+
+    return;
+
+  }
+
+
+  paymentAmount = amount;
+
+
+  /* =========================
+     UPI PAYMENT
+  ========================= */
+
+  const upiId =
+    "8901239533@amazonpay";
+
+  const payeeName =
+    "Deposit";
+
+
+  const transactionId =
+    "DEP" +
+    Date.now();
+
+
+  const upiUrl =
+    "upi://pay" +
+    "?pa=" +
+    encodeURIComponent(upiId) +
+    "&pn=" +
+    encodeURIComponent(payeeName) +
+    "&am=" +
+    encodeURIComponent(amount.toFixed(2)) +
+    "&cu=INR" +
+    "&tr=" +
+    encodeURIComponent(transactionId);
+
+
+  /*
+    UPI APP OPEN
+  */
+
+  window.location.href = upiUrl;
+
+
+  /*
+    UTR SECTION SHOW
+    Browser me wapas aane par
+    user UTR submit kar sakta hai.
+  */
+
+  document.getElementById("utrSection").style.display = "block";
+
+}
+
+
+/* =========================
+   SUBMIT DEPOSIT REQUEST
+========================= */
+
+async function submitRequest(){
+
+  const utrInput =
+    document.getElementById("utr");
+
+  const utr =
+    utrInput.value.trim();
+
+
+  /* =========================
+     CHECK AMOUNT
+  ========================= */
+
+  if(
+    !paymentAmount ||
+    paymentAmount <= 0
+  ){
+
+    alert(
+      "Pehle amount enter karke Pay Now karein."
+    );
+
+    return;
+
+  }
+
+
+  /* =========================
+     CHECK UTR
+  ========================= */
+
+  if(!utr){
+
+    alert(
+      "Payment ke baad UTR number enter karein."
+    );
+
+    utrInput.focus();
+
+    return;
+
+  }
+
+
+  /* =========================
+     USER DATA
+  ========================= */
+
+  const userData =
+    localStorage.getItem("user");
+
+
+  if(!userData){
+
+    alert(
+      "User login nahi hai. Pehle login karein."
+    );
+
+    return;
+
+  }
+
+
+  let user;
+
+  try{
+
+    user =
+      JSON.parse(userData);
+
+  }catch(error){
+
+    alert(
+      "User data invalid hai. Dobara login karein."
+    );
+
+    return;
+
+  }
+
+
+  if(!user.id){
+
+    alert(
+      "User ID nahi mili. Dobara login karein."
+    );
+
+    return;
+
+  }
+
+
+  /* =========================
+     MOBILE
+  ========================= */
+
+  const mobile =
+    user.mobile ||
+    "";
+
+
+  /* =========================
+     INSERT REQUEST
+  ========================= */
+
+  const { data, error } =
+    await client
+      .from("deposit_requests")
+      .insert([
+
+        {
+          user_id: user.id,
+          mobile: mobile,
+          amount: paymentAmount,
+          utr: utr,
+          status: "pending"
+        }
+
+      ])
+      .select();
+
+
+  /* =========================
+     ERROR
+  ========================= */
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Request submit nahi hui:\n" +
+      error.message
+    );
+
+    return;
+
+  }
+
+
+  /* =========================
+     SUCCESS
+  ========================= */
+
+  alert(
+    "Deposit request submit ho gayi.\n\n" +
+    "Admin payment verify karke balance add karega."
+  );
+
+
+  /*
+    Form clear
+  */
+
+  document.getElementById("amount").value = "";
+
+  document.getElementById("utr").value = "";
+
+  document.getElementById("utrSection").style.display = "none";
+
+  paymentAmount = 0;
+
+}
+
+</script>
+
+</body>
+
+</html>
