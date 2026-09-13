@@ -445,7 +445,7 @@ async function loadProfile(){
     .from("login")
 
     .select(
-      "id,name,mobile,ref_code,qr_code,upi_id,bank_name,account_holder,account_number,ifsc_code"
+      "id,name,mobile,refer_code,qr_code,upi_id,bank_name,account_holder,account_number,ifsc_code"
     )
 
     .eq(
@@ -485,7 +485,7 @@ async function loadProfile(){
     data.mobile ?? "-";
 
   document.getElementById("refCode").innerText =
-    data.ref_code ?? "-";
+  data.refer_code ?? "-"
 
 
   // ===================================
