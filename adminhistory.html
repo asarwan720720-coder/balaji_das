@@ -1,0 +1,826 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Users Admin</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f2f2f2;
+    padding:20px;
+    margin:0;
+}
+
+h2{
+    text-align:center;
+}
+
+.update-box{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:20px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+select,
+input{
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:15px;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#2196f3;
+    color:#fff;
+}
+
+button:disabled{
+    opacity:0.6;
+    cursor:not-allowed;
+}
+
+.table-box{
+    background:#fff;
+    padding:10px;
+    border-radius:10px;
+    overflow-x:auto;
+    margin-bottom:20px;
+}
+
+table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:800px;
+}
+
+th,
+td{
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:center;
+}
+
+th{
+    background:#eee;
+}
+
+/* HISTORY */
+
+.history-box{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    overflow-x:auto;
+}
+
+.history-title{
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:12px;
+}
+
+.history-table{
+    min-width:950px;
+}
+
+.deposit{
+    color:green;
+    font-weight:bold;
+}
+
+.withdraw{
+    color:red;
+    font-weight:bold;
+}
+
+.success{
+    color:green;
+    font-weight:bold;
+}
+
+.no-history{
+    text-align:center;
+    padding:15px;
+    color:#777;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h2>Users / Login</h2>
+
+
+<!-- BALANCE UPDATE -->
+
+<div class="update-box">
+
+    <select id="userId">
+
+        <option value="">
+            Select User
+        </option>
+
+    </select>
+
+
+    <input
+        type="number"
+        id="amount"
+        placeholder="Enter amount"
+    >
+
+
+    <select id="action">
+
+        <option value="deposit">
+            Deposit
+        </option>
+
+        <option value="withdraw">
+            Withdraw
+        </option>
+
+    </select>
+
+
+    <button
+        id="updateBtn"
+        onclick="updateBalance()"
+    >
+        Update Balance
+    </button>
+
+</div>
+
+
+<!-- USERS -->
+
+<div class="table-box">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>Name</th>
+<th>Mobile</th>
+<th>Password</th>
+<th>Balance</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="userData"></tbody>
+
+</table>
+
+</div>
+
+
+<!-- ADMIN HISTORY -->
+
+<div class="history-box">
+
+    <div class="history-title">
+        Balance Change History
+    </div>
+
+
+    <div id="historyData">
+
+        <div class="no-history">
+            Loading history...
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+
+/* =========================
+   SUPABASE
+========================= */
+
+const client = supabase.createClient(
+
+    "https://katbdbzoufiblnnsoxkk.supabase.co",
+
+    "sb_publishable_--fdpQMmSlUyt2ywjUErgQ_LXGvQH-a"
+
+);
+
+
+/* =========================
+   LOAD USERS
+========================= */
+
+async function loadUsers(){
+
+    const { data, error } =
+
+        await client
+        .from("login")
+        .select("*");
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "Users load nahi ho rahe."
+        );
+
+        return;
+
+    }
+
+
+    let html = "";
+
+    let options =
+        '<option value="">Select User</option>';
+
+
+    data.forEach(r => {
+
+
+        html += `
+
+        <tr>
+
+            <td>
+                ${r.id ?? ""}
+            </td>
+
+            <td>
+                ${r.name ?? ""}
+            </td>
+
+            <td>
+                ${r.mobile ?? ""}
+            </td>
+
+            <td>
+                ${r.password ?? ""}
+            </td>
+
+            <td>
+                ${r.balance ?? 0}
+            </td>
+
+        </tr>
+
+        `;
+
+
+        options += `
+
+        <option value="${r.id}">
+
+            ${r.id} - ${r.name ?? ""}
+
+        </option>
+
+        `;
+
+    });
+
+
+    document.getElementById(
+        "userData"
+    ).innerHTML = html;
+
+
+    document.getElementById(
+        "userId"
+    ).innerHTML = options;
+
+}
+
+
+/* =========================
+   UPDATE BALANCE
+========================= */
+
+async function updateBalance(){
+
+    const button =
+        document.getElementById(
+            "updateBtn"
+        );
+
+
+    const id =
+        document.getElementById(
+            "userId"
+        ).value;
+
+
+    const amount =
+        parseInt(
+            document.getElementById(
+                "amount"
+            ).value
+        );
+
+
+    const action =
+        document.getElementById(
+            "action"
+        ).value;
+
+
+    /* CHECK USER */
+
+    if(!id){
+
+        alert(
+            "Pehle user select karo."
+        );
+
+        return;
+
+    }
+
+
+    /* CHECK AMOUNT */
+
+    if(!amount || amount <= 0){
+
+        alert(
+            "Valid amount enter karo."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       BUTTON DISABLE
+       taaki same action
+       baar-baar na chale
+    */
+
+    button.disabled = true;
+
+    button.innerText =
+        "Processing...";
+
+
+    /* =========================
+       GET CURRENT BALANCE
+    ========================= */
+
+    const { data, error } =
+
+        await client
+        .from("login")
+        .select("id,name,balance")
+        .eq("id", id)
+        .single();
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "User balance nahi mila."
+        );
+
+        button.disabled = false;
+
+        button.innerText =
+            "Update Balance";
+
+        return;
+
+    }
+
+
+    const oldBalance =
+        Number(
+            data.balance || 0
+        );
+
+
+    let newBalance;
+
+
+    /* =========================
+       CALCULATE NEW BALANCE
+    ========================= */
+
+    if(action === "deposit"){
+
+        newBalance =
+            oldBalance + amount;
+
+    }else{
+
+        newBalance =
+            oldBalance - amount;
+
+    }
+
+
+    /* =========================
+       NEGATIVE BALANCE CHECK
+    ========================= */
+
+    if(newBalance < 0){
+
+        alert(
+            "Balance 0 se kam nahi ho sakta."
+        );
+
+        button.disabled = false;
+
+        button.innerText =
+            "Update Balance";
+
+        return;
+
+    }
+
+
+    /* =========================
+       UPDATE LOGIN BALANCE
+    ========================= */
+
+    const { error:updateError } =
+
+        await client
+        .from("login")
+        .update({
+
+            balance:newBalance
+
+        })
+        .eq("id",id);
+
+
+    if(updateError){
+
+        console.error(updateError);
+
+        alert(
+            "Balance update nahi hua."
+        );
+
+        button.disabled = false;
+
+        button.innerText =
+            "Update Balance";
+
+        return;
+
+    }
+
+
+    /* =========================
+       SAVE HISTORY
+    ========================= */
+
+    const { error:historyError } =
+
+        await client
+        .from("history")
+        .insert({
+
+            user_id:id,
+
+            admin_user_id:id,
+
+            action_amount:amount,
+
+            action_type:
+                action === "deposit"
+                ? "Deposit"
+                : "Withdraw",
+
+            old_balance:oldBalance,
+
+            new_balance:newBalance,
+
+            admin_action:
+                action === "deposit"
+                ? "Admin Deposit"
+                : "Admin Withdraw",
+
+            status:"success",
+
+            total:amount,
+
+            mode:"admin"
+
+        });
+
+
+    /*
+       AGAR HISTORY SAVE NA HO
+    */
+
+    if(historyError){
+
+        console.error(
+            "History Error:",
+            historyError
+        );
+
+
+        /*
+           Balance ko purane
+           balance par wapas
+           karne ki koshish
+        */
+
+        await client
+        .from("login")
+        .update({
+
+            balance:oldBalance
+
+        })
+        .eq("id",id);
+
+
+        alert(
+            "History save nahi hui, isliye balance change cancel kar diya gaya."
+        );
+
+
+        button.disabled = false;
+
+        button.innerText =
+            "Update Balance";
+
+        return;
+
+    }
+
+
+    /* =========================
+       SUCCESS
+    ========================= */
+
+    alert(
+
+        action === "deposit"
+
+        ? "Deposit successful aur history save ho gayi. ✅"
+
+        : "Withdraw successful aur history save ho gayi. ✅"
+
+    );
+
+
+    /* CLEAR AMOUNT */
+
+    document.getElementById(
+        "amount"
+    ).value = "";
+
+
+    /* RELOAD */
+
+    await loadUsers();
+
+    await loadHistory();
+
+
+    button.disabled = false;
+
+    button.innerText =
+        "Update Balance";
+
+}
+
+
+/* =========================
+   LOAD HISTORY
+========================= */
+
+async function loadHistory(){
+
+    const box =
+        document.getElementById(
+            "historyData"
+        );
+
+
+    box.innerHTML =
+        '<div class="no-history">Loading history...</div>';
+
+
+    const { data, error } =
+
+        await client
+        .from("history")
+        .select(
+            "id,user_id,admin_user_id,action_amount,action_type,old_balance,new_balance,admin_action,status,created_at,total,mode"
+        )
+        .not(
+            "admin_action",
+            "is",
+            null
+        )
+        .order(
+            "created_at",
+            {
+                ascending:false
+            }
+        );
+
+
+    if(error){
+
+        console.error(
+            "History Load Error:",
+            error
+        );
+
+
+        box.innerHTML =
+
+            '<div class="no-history">History load nahi hui.</div>';
+
+        return;
+
+    }
+
+
+    if(!data || data.length === 0){
+
+        box.innerHTML =
+
+            '<div class="no-history">Abhi koi admin balance history nahi hai.</div>';
+
+        return;
+
+    }
+
+
+    let html = `
+
+    <table class="history-table">
+
+        <thead>
+
+            <tr>
+
+                <th>History ID</th>
+
+                <th>User ID</th>
+
+                <th>Action</th>
+
+                <th>Amount</th>
+
+                <th>Old Balance</th>
+
+                <th>New Balance</th>
+
+                <th>Status</th>
+
+                <th>Date / Time</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+    `;
+
+
+    data.forEach(r => {
+
+
+        const action =
+            r.action_type || "-";
+
+
+        const actionClass =
+            action.toLowerCase()
+            === "deposit"
+            ? "deposit"
+            : "withdraw";
+
+
+        const date =
+            r.created_at
+            ? new Date(
+                r.created_at
+              ).toLocaleString(
+                "en-IN"
+              )
+            : "-";
+
+
+        html += `
+
+        <tr>
+
+            <td>
+                ${r.id ?? ""}
+            </td>
+
+            <td>
+                ${r.user_id ?? ""}
+            </td>
+
+            <td class="${actionClass}">
+                ${action}
+            </td>
+
+            <td>
+                ₹ ${r.action_amount ?? r.total ?? 0}
+            </td>
+
+            <td>
+                ₹ ${r.old_balance ?? 0}
+            </td>
+
+            <td>
+                ₹ ${r.new_balance ?? 0}
+            </td>
+
+            <td class="success">
+                ${r.status ?? "-"}
+            </td>
+
+            <td>
+                ${date}
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+
+    html += `
+
+        </tbody>
+
+    </table>
+
+    `;
+
+
+    box.innerHTML = html;
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadUsers();
+
+loadHistory();
+
+</script>
+
+
+</body>
+
+</html>
+```
