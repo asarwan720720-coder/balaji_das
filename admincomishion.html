@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Commission Admin</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    padding:20px;
+    font-family:Arial,sans-serif;
+    background:#f2f2f2;
+}
+
+h2{
+    text-align:center;
+}
+
+.admin-box{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+.form-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+select,
+input{
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:15px;
+}
+
+button{
+    padding:10px 15px;
+    border:0;
+    border-radius:8px;
+    background:#2196f3;
+    color:#fff;
+    cursor:pointer;
+}
+
+button:disabled{
+    opacity:.6;
+}
+
+.table-box{
+    background:#fff;
+    padding:10px;
+    border-radius:10px;
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    min-width:900px;
+    border-collapse:collapse;
+}
+
+th,
+td{
+    border:1px solid #ddd;
+    padding:9px;
+    text-align:center;
+}
+
+th{
+    background:#eee;
+}
+
+.edit-btn{
+    background:#ff9800;
+}
+
+.delete-btn{
+    background:#f44336;
+}
+
+.green{
+    color:green;
+    font-weight:bold;
+}
+
+.blue{
+    color:#2196f3;
+    font-weight:bold;
+}
+
+.total{
+    font-weight:bold;
+}
+
+.message{
+    margin-top:10px;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h2>Commission Admin</h2>
+
+
+<!-- =========================
+     COMMISSION SETTING
+========================= -->
+
+<div class="admin-box">
+
+    <h3>Customer Commission Setting</h3>
+
+    <div class="form-row">
+
+        <select id="userId">
+
+            <option value="">
+                Select User
+            </option>
+
+        </select>
+
+        <input
+            type="number"
+            id="commissionPercent"
+            placeholder="Commission %"
+            min="0"
+            step="0.01"
+        >
+
+        <button
+            id="saveCommissionBtn"
+            onclick="saveCommission()"
+        >
+            Save Commission
+        </button>
+
+    </div>
+
+    <div
+        id="commissionMessage"
+        class="message"
+    ></div>
+
+</div>
+
+
+<!-- =========================
+     RECORD ADD / EDIT
+========================= -->
+
+<div class="admin-box">
+
+    <h3>Add / Edit Record</h3>
+
+    <div class="form-row">
+
+        <input
+            type="number"
+            id="recordId"
+            placeholder="Record ID"
+        >
+
+        <input
+            type="number"
+            id="referralId"
+            placeholder="Referral ID"
+        >
+
+        <input
+            type="number"
+            id="commissionAmount"
+            placeholder="Commission Amount"
+            min="0"
+            step="0.01"
+        >
+
+        <input
+            type="number"
+            id="winningAmount"
+            placeholder="Winning Amount"
+            min="0"
+            step="0.01"
+        >
+
+        <button
+            onclick="saveRecord()"
+        >
+            Save Record
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     RECORD TABLE
+========================= -->
+
+<div class="table-box">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>User ID</th>
+<th>Referral ID</th>
+<th>Commission %</th>
+<th>Commission</th>
+<th>Winning</th>
+<th>Total</th>
+<th>Date</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="recordData">
+
+<tr>
+
+<td colspan="9">
+Loading...
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+
+/* =========================
+   SUPABASE
+========================= */
+
+const client = supabase.createClient(
+
+    "https://katbdbzoufiblnnsoxkk.supabase.co",
+
+    "sb_publishable_--fdpQMmSlUyt2ywjUErgQ_LXGvQH-a"
+
+);
+
+
+/* =========================
+   LOAD USERS
+========================= */
+
+async function loadUsers(){
+
+    const { data, error } =
+
+        await client
+        .from("login")
+        .select("id,name,commission")
+        .order("id");
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "Users load nahi ho rahe."
+        );
+
+        return;
+
+    }
+
+
+    const select =
+        document.getElementById(
+            "userId"
+        );
+
+
+    let html =
+        '<option value="">Select User</option>';
+
+
+    data.forEach(user => {
+
+        html += `
+
+        <option
+            value="${user.id}"
+            data-commission="${user.commission ?? 0}"
+        >
+
+            ${user.id} - ${user.name ?? ""}
+
+        </option>
+
+        `;
+
+    });
+
+
+    select.innerHTML = html;
+
+}
+
+
+/* =========================
+   USER SELECT
+========================= */
+
+document
+.getElementById("userId")
+.addEventListener(
+    "change",
+    function(){
+
+        const option =
+            this.options[
+                this.selectedIndex
+            ];
+
+
+        if(!this.value){
+
+            document.getElementById(
+                "commissionPercent"
+            ).value = "";
+
+            return;
+
+        }
+
+
+        document.getElementById(
+            "commissionPercent"
+        ).value =
+            option.dataset.commission || 0;
+
+    }
+);
+
+
+/* =========================
+   SAVE COMMISSION
+========================= */
+
+async function saveCommission(){
+
+    const userId =
+        document.getElementById(
+            "userId"
+        ).value;
+
+
+    const commission =
+        Number(
+            document.getElementById(
+                "commissionPercent"
+            ).value
+        );
+
+
+    const message =
+        document.getElementById(
+            "commissionMessage"
+        );
+
+
+    if(!userId){
+
+        message.innerText =
+            "Pehle user select karo.";
+
+        return;
+
+    }
+
+
+    if(
+        isNaN(commission) ||
+        commission < 0
+    ){
+
+        message.innerText =
+            "Valid commission enter karo.";
+
+        return;
+
+    }
+
+
+    const { error } =
+
+        await client
+        .from("login")
+        .update({
+
+            commission:commission
+
+        })
+        .eq(
+            "id",
+            Number(userId)
+        );
+
+
+    if(error){
+
+        console.error(error);
+
+        message.innerText =
+            "Commission save nahi hui.";
+
+        return;
+
+    }
+
+
+    message.innerText =
+        "Commission successfully save ho gayi. ✅";
+
+
+    await loadUsers();
+
+}
+
+
+/* =========================
+   LOAD RECORDS
+========================= */
+
+async function loadRecords(){
+
+    const tbody =
+        document.getElementById(
+            "recordData"
+        );
+
+
+    const { data, error } =
+
+        await client
+        .from("commission_records")
+        .select(
+            "id,user_id,referral_id,commission_percent,commission_amount,winning_amount,total_amount,created_at"
+        )
+        .order(
+            "created_at",
+            {
+                ascending:false
+            }
+        );
+
+
+    if(error){
+
+        console.error(error);
+
+        tbody.innerHTML = `
+
+        <tr>
+
+            <td colspan="9">
+                Records load nahi hue.
+            </td>
+
+        </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    if(!data || data.length === 0){
+
+        tbody.innerHTML = `
+
+        <tr>
+
+            <td colspan="9">
+                Abhi koi record nahi hai.
+            </td>
+
+        </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    let html = "";
+
+
+    data.forEach(row => {
+
+        const date =
+            row.created_at
+            ? new Date(
+                row.created_at
+              ).toLocaleString("en-IN")
+            : "";
+
+
+        html += `
+
+        <tr>
+
+            <td>
+                ${row.id}
+            </td>
+
+            <td>
+                ${row.user_id}
+            </td>
+
+            <td>
+                ${row.referral_id ?? "-"}
+            </td>
+
+            <td>
+                ${row.commission_percent ?? 0}%
+            </td>
+
+            <td class="green">
+                ₹${row.commission_amount ?? 0}
+            </td>
+
+            <td class="blue">
+                ₹${row.winning_amount ?? 0}
+            </td>
+
+            <td class="total">
+                ₹${row.total_amount ?? 0}
+            </td>
+
+            <td>
+                ${date}
+            </td>
+
+            <td>
+
+                <button
+                    class="edit-btn"
+                    onclick="editRecord(
+                        ${row.id},
+                        ${row.referral_id ?? 0},
+                        ${row.commission_amount ?? 0},
+                        ${row.winning_amount ?? 0}
+                    )"
+                >
+                    Edit
+                </button>
+
+                <button
+                    class="delete-btn"
+                    onclick="deleteRecord(${row.id})"
+                >
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+
+    tbody.innerHTML = html;
+
+}
+
+
+/* =========================
+   EDIT RECORD
+========================= */
+
+function editRecord(
+    id,
+    referralId,
+    commission,
+    winning
+){
+
+    document.getElementById(
+        "recordId"
+    ).value = id;
+
+
+    document.getElementById(
+        "referralId"
+    ).value = referralId;
+
+
+    document.getElementById(
+        "commissionAmount"
+    ).value = commission;
+
+
+    document.getElementById(
+        "winningAmount"
+    ).value = winning;
+
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+
+}
+
+
+/* =========================
+   SAVE RECORD
+========================= */
+
+async function saveRecord(){
+
+    const recordId =
+        document.getElementById(
+            "recordId"
+        ).value;
+
+
+    const referralId =
+        document.getElementById(
+            "referralId"
+        ).value;
+
+
+    const commission =
+        Number(
+            document.getElementById(
+                "commissionAmount"
+            ).value
+        );
+
+
+    const winning =
+        Number(
+            document.getElementById(
+                "winningAmount"
+            ).value
+        );
+
+
+    if(
+        !recordId ||
+        !referralId
+    ){
+
+        alert(
+            "Record ID aur Referral ID enter karo."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        commission < 0 ||
+        winning < 0
+    ){
+
+        alert(
+            "Amount valid hona chahiye."
+        );
+
+        return;
+
+    }
+
+
+    const total =
+        commission + winning;
+
+
+    const { error } =
+
+        await client
+        .from("commission_records")
+        .update({
+
+            referral_id:
+                Number(referralId),
+
+            commission_amount:
+                commission,
+
+            winning_amount:
+                winning
+
+        })
+        .eq(
+            "id",
+            Number(recordId)
+        );
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "Record update nahi hua."
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        "Record update ho gaya. ✅"
+    );
+
+
+    document.getElementById(
+        "recordId"
+    ).value = "";
+
+    document.getElementById(
+        "referralId"
+    ).value = "";
+
+    document.getElementById(
+        "commissionAmount"
+    ).value = "";
+
+    document.getElementById(
+        "winningAmount"
+    ).value = "";
+
+
+    await loadRecords();
+
+}
+
+
+/* =========================
+   DELETE RECORD
+========================= */
+
+async function deleteRecord(id){
+
+    const ok =
+        confirm(
+            "Kya ye record delete karna hai?"
+        );
+
+
+    if(!ok){
+
+        return;
+
+    }
+
+
+    const { error } =
+
+        await client
+        .from("commission_records")
+        .delete()
+        .eq(
+            "id",
+            Number(id)
+        );
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "Record delete nahi hua."
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        "Record delete ho gaya."
+    );
+
+
+    await loadRecords();
+
+}
+
+
+/* =========================
+   PAGE LOAD
+========================= */
+
+loadUsers();
+
+loadRecords();
+
+
+</script>
+
+</body>
+
+</html>
