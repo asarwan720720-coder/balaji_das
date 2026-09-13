@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -672,5 +671,162 @@ async function loadHistory(){
 
         box.innerHTML =
 
-            '<div class="no-history">A
-```
+            '<div class="no-history">Abhi koi admin history nahi hai.</div>';
+
+        return;
+
+    }
+
+
+    /* =========================
+       HISTORY TABLE
+    ========================= */
+
+    let html = `
+
+    <table class="history-table">
+
+        <thead>
+
+            <tr>
+
+                <th>History ID</th>
+
+                <th>User ID</th>
+
+                <th>Admin ID</th>
+
+                <th>Action</th>
+
+                <th>Amount</th>
+
+                <th>Old Balance</th>
+
+                <th>New Balance</th>
+
+                <th>Status</th>
+
+                <th>Date / Time</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+    `;
+
+
+    data.forEach(r => {
+
+        let actionClass = "";
+
+        if(r.action_type === "Deposit"){
+
+            actionClass = "deposit";
+
+        }
+
+        if(r.action_type === "Withdraw"){
+
+            actionClass = "withdraw";
+
+        }
+
+
+        let statusClass = "";
+
+        if(r.status === "success"){
+
+            statusClass = "success";
+
+        }
+
+
+        let dateTime = "";
+
+        if(r.created_at){
+
+            dateTime =
+                new Date(
+                    r.created_at
+                ).toLocaleString("en-IN");
+
+        }
+
+
+        html += `
+
+        <tr>
+
+            <td>
+                ${r.id ?? ""}
+            </td>
+
+            <td>
+                ${r.user_id ?? ""}
+            </td>
+
+            <td>
+                ${r.admin_user_id ?? "-"}
+            </td>
+
+            <td class="${actionClass}">
+                ${r.action_type ?? ""}
+            </td>
+
+            <td>
+                ₹${r.action_amount ?? 0}
+            </td>
+
+            <td>
+                ₹${r.old_balance ?? 0}
+            </td>
+
+            <td>
+                ₹${r.new_balance ?? 0}
+            </td>
+
+            <td class="${statusClass}">
+                ${r.status ?? ""}
+            </td>
+
+            <td>
+                ${dateTime}
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+
+    html += `
+
+        </tbody>
+
+    </table>
+
+    `;
+
+
+    box.innerHTML = html;
+
+}
+
+
+/* =========================
+   PAGE LOAD
+========================= */
+
+loadUsers();
+
+loadHistory();
+
+
+</script>
+
+</body>
+
+</html>
