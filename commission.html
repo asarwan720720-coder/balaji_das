@@ -1,0 +1,212 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Commission</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    padding:15px;
+    font-family:Arial,sans-serif;
+    background:#f5f5f5;
+}
+
+h2{
+    text-align:center;
+    margin:10px 0 20px;
+}
+
+.table-box{
+    width:100%;
+    overflow-x:auto;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+table{
+    width:100%;
+    min-width:600px;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:12px 10px;
+    text-align:center;
+    border-bottom:1px solid #eee;
+}
+
+th{
+    background:#222;
+    color:white;
+}
+
+td{
+    color:#333;
+}
+
+.loading,
+.no-data,
+.error{
+    text-align:center;
+    padding:25px;
+}
+
+.error{
+    color:red;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Commission History</h2>
+
+<div class="table-box">
+
+<table>
+<thead>
+<tr>
+    <th>User ID</th>
+    <th>Market</th>
+    <th>Total</th>
+    <th>Commission</th>
+</tr>
+</thead>
+
+<tbody id="commissionBody">
+<tr>
+    <td colspan="4" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { supabase } from "./supabase.js";
+
+async function loadCommission(){
+
+    const body = document.getElementById("commissionBody");
+
+    try{
+
+        // Current logged-in user
+        const {
+            data: { user },
+            error: sessionError
+        } = await supabase.auth.getUser();
+
+        if(sessionError || !user){
+            body.innerHTML = `
+                <tr>
+                    <td colspan="4" class="error">
+                        User login nahi hai.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        /*
+         * Login table se current user ka refer_code
+         */
+        const { data: loginData, error: loginError } = await supabase
+            .from("login")
+            .select("refer_code")
+            .eq("user_id", user.id)
+            .single();
+
+        if(loginError){
+            throw loginError;
+        }
+
+        if(!loginData || !loginData.refer_code){
+
+            body.innerHTML = `
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Referral code nahi mila.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        /*
+         * Sirf wahi commission records
+         * jinka ref_by current user's refer_code ke equal hai
+         */
+        const { data, error } = await supabase
+            .from("commission_records")
+            .select("user_id, market, total, commission")
+            .eq("ref_by", loginData.refer_code)
+            .order("created_at", { ascending:false });
+
+        if(error){
+            throw error;
+        }
+
+        if(!data || data.length === 0){
+
+            body.innerHTML = `
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Abhi koi commission record nahi hai.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        body.innerHTML = "";
+
+        data.forEach(row => {
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${row.user_id ?? ""}</td>
+                <td>${row.market ?? ""}</td>
+                <td>₹${Number(row.total ?? 0).toFixed(2)}</td>
+                <td>₹${Number(row.commission ?? 0).toFixed(2)}</td>
+            `;
+
+            body.appendChild(tr);
+        });
+
+    }catch(error){
+
+        console.error(error);
+
+        body.innerHTML = `
+            <tr>
+                <td colspan="4" class="error">
+                    Commission data load nahi ho saka.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+loadCommission();
+
+</script>
+
+</body>
+</html>
+```
